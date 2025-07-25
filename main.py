@@ -51,7 +51,7 @@ def get_weather_icon(condition):
 # Ask user for input
 #city = input("Enter city name: ")
 #get_weather(city)
-st.title("My Privet Reich Weather ☀️ or 🌧️ ")
+st.title("My Private Reich Weather ☀️ or 🌧️ ")
 city = st.text_input("Enter city name")
 if st.button("Get Weather") and city:
     result = get_weather(city)

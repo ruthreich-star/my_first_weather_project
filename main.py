@@ -3,10 +3,10 @@ import pandas as pd
 import numpy as np
 import requests as rq
 from datetime import datetime, timedelta
-df = pd.read_csv(r"C:\Users\reich\OneDrive\מסמכים\GitHub\israel-cities.csv")
+#df = pd.read_csv(r"C:\Users\reich\OneDrive\מסמכים\GitHub\israel-cities.csv")
 #print(df)
 #city_names = df["name"].tolist()
-city_names = sorted(df["name"].dropna().unique().tolist())
+#city_names = sorted(df["name"].dropna().unique().tolist())
 #selected_city = st.selectbox("בחר עיר", city_names)
 API_KEY = "0a867690493989d87c77fa39ebf46377"
 def get_weather(city):

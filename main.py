@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import requests as rq
 from datetime import datetime, timedelta
+import pytz
 #df = pd.read_csv(r"C:\Users\reich\OneDrive\מסמכים\GitHub\israel-cities.csv")
 #print(df)
 #city_names = df["name"].tolist()
@@ -58,6 +59,10 @@ city = st.text_input("Enter city name")
 if st.button("Get Weather") and city:
     result = get_weather(city)
     if result:
+        user_timezone = pytz.timezone("Asia/Jerusalem")
+        user_time = datetime.now(user_timezone)
+        formatted_user_time = user_time.strftime("%A, %B %d, %Y, %I:%M %p")
+        st.write(f"🕒User Time: {formatted_user_time}")
         st.write(f"### Weather in {result['city']}")
         st.write(f"Temperature: {int(result['temperature'])}°C")
         icon = get_weather_icon(result['weather'])
@@ -67,6 +72,6 @@ if st.button("Get Weather") and city:
         utc_now = datetime.utcnow()
         local_time = utc_now + timedelta(seconds=result["timezone_offset_sec"])
         formatted_time = local_time.strftime("%A, %B %d, %Y, %I:%M %p")
-        st.write(f"Local Time: {formatted_time}")
+        st.write(f"🌍 weather Location Time: {formatted_time}")
     else:
         st.error("City not found.")

@@ -31,7 +31,9 @@ def get_weather(city):
             "timezone_offset_sec" : data["timezone"]
         }
     else:
-        return None
+        #return None
+        # החזרת תשובה של השגיאה במקום כלום
+        return response.raise_for_status()
 def get_weather_icon(condition):
     condition = condition.lower()
     if "clear" in condition:
@@ -57,11 +59,11 @@ if st.button("Get Weather") and city:
     result = get_weather(city)
     if result:
         st.write(f"### Weather in {result['city']}")
-        st.write(f"Temperature: {result['temperature']}°C")
+        st.write(f"Temperature: {int(result['temperature'])}°C")
         icon = get_weather_icon(result['weather'])
         st.write(f"Condition: {icon} {result['weather']}")
 #        st.write(f"Condition: {result['weather']}")
-        st.write(f"Humidity: {result['humidity']}%")
+        st.write(f"Humidity: {int(result['humidity'])}%")
         utc_now = datetime.utcnow()
         local_time = utc_now + timedelta(seconds=result["timezone_offset_sec"])
         formatted_time = local_time.strftime("%A, %B %d, %Y, %I:%M %p")

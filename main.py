@@ -6,10 +6,61 @@ from datetime import datetime, timedelta
 import pytz
 import folium
 from streamlit_folium import folium_static
+import matplotlib.pyplot as plt
+import seaborn as sns
+from io import BytesIO
 st.image("weatherly_logo.png", width=250)
 # padding: 10px 0 20px 0;">
 #🌦️ Weatherly
 #        <h3 style="color: #444;">Smart Weather. Live Maps. Simple Vibe.</h3>
+current_month = datetime.now().month
+month_name = datetime.now().strftime("%B")
+def get_monthly_avg_temps(lat, lon, month=current_month):
+    current_year = datetime.now().year
+    years = [current_year - i for i in range(1, 6)]
+    avg_temps = []
+
+    for year in years:
+        start_date = f"{year}-{month:02d}-01"
+        end_date = f"{year}-{month:02d}-31"
+        url = "https://archive-api.open-meteo.com/v1/archive"
+        params = {
+            "latitude": lat,
+            "longitude": lon,
+            "start_date": start_date,
+            "end_date": end_date,
+            "daily": "temperature_2m_max",
+            "timezone": "auto"
+        }
+        response = rq.get(url, params=params)
+        if response.status_code == 200:
+            data = response.json()
+            temps = data.get("daily", {}).get("temperature_2m_max", [])
+            if temps:
+                avg = sum(temps) / len(temps)
+                avg_temps.append((year, round(avg, 1)))
+            else:
+                avg_temps.append((year, None))
+        else:
+            avg_temps.append((year, None))
+    return avg_temps
+
+def plot_temp_history(data):
+    df = pd.DataFrame(data, columns=["Year", "Avg Temperature"])
+    fig, ax = plt.subplots(figsize=(4, 2))
+    sns.barplot(x="Year", y="Avg Temperature", data=df, palette="coolwarm", ax=ax,width=0.4)
+    ax.set_title(f"{month_name} Avg Temps - Past 5 Years",fontsize=5, fontweight='bold', color="#00aaff")
+    ax.set_xlabel("YEAR", color="#00aaff", fontsize=5)
+    ax.set_ylabel("°C" , color="#00aaff", fontsize=5)
+    ax.set_ylim(20, 36)
+    ax.tick_params(axis='both', labelsize=4)
+    buf = BytesIO()
+    plt.tight_layout()
+    fig.savefig(buf, format="png")
+    buf.seek(0)
+    st.image(buf, caption=f"Historical {month_name} Temperatures", use_container_width=True)
+
+
 st.markdown("""
     <div style="text-align: center; margin-top: -130px;">  
         <h1 style="font-size: 30px; color: #00aaff; font-family: 'Segoe UI', sans-serif;">
@@ -110,7 +161,8 @@ if submitted and city:
             #folium_static(m)
             folium_static(m, width=200, height=200)
 
-
+        history = get_monthly_avg_temps(result["latitude"], result["longitude"])
+        plot_temp_history(history)
          #   folium.Marker([lat, lon], tooltip=result["city"]).add_to(m)
          #   folium_static(m, width=350, height=300)
     else:

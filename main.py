@@ -4,6 +4,8 @@ import numpy as np
 import requests as rq
 from datetime import datetime, timedelta
 import pytz
+#import folium
+#from streamlit_folium import folium_static
 #df = pd.read_csv(r"C:\Users\reich\OneDrive\מסמכים\GitHub\israel-cities.csv")
 #print(df)
 #city_names = df["name"].tolist()
@@ -29,12 +31,14 @@ def get_weather(city):
             "temperature": data["main"]["temp"],
             "weather": data["weather"][0]["description"],
             "humidity": data["main"]["humidity"],
-            "timezone_offset_sec" : data["timezone"]
+            "timezone_offset_sec" : data["timezone"] #,
+            #"latitude": data["coord"]["lat"],
+            #"longitude": data["coord"]["lon"]
         }
     else:
-        #return None
+        return None
         # החזרת תשובה של השגיאה במקום כלום
-        return response.raise_for_status()
+        #return response.raise_for_status()
 def get_weather_icon(condition):
     condition = condition.lower()
     if "clear" in condition:
@@ -55,14 +59,27 @@ def get_weather_icon(condition):
 #city = input("Enter city name: ")
 #get_weather(city)
 st.title("My Private Reich Weather ☀️ or 🌧️ ")
-city = st.text_input("Enter city name")
-if st.button("Get Weather") and city:
+local_city = "Jerusalem"
+url = f"http://api.openweathermap.org/data/2.5/weather?q={local_city}&appid={API_KEY}&units=metric"
+response1 = rq.get(url)
+data1 = response1.json()
+local_zone = data1["timezone"]
+#city = st.text_input("Enter city name")
+#if st.button("Get Weather") and city:
+#cities_list = ["Tel Aviv", "Jerusalem", "Haifa", "Eilat"]
+with st.form(key="weather_form"):
+    city = st.text_input("Enter city name")
+    submitted = st.form_submit_button("Get Weather")
+#  if st.form_submit_button("") and city:
+if submitted and city:
+
     result = get_weather(city)
     if result:
-        user_timezone = pytz.timezone("Asia/Jerusalem")
-        user_time = datetime.now(user_timezone)
-        formatted_user_time = user_time.strftime("%A, %B %d, %Y, %I:%M %p")
-        st.write(f"🕒User Time: {formatted_user_time}")
+        if local_zone != result["timezone_offset_sec"]:
+           user_timezone = pytz.timezone("Asia/Jerusalem")
+           user_time = datetime.now(user_timezone)
+           formatted_user_time = user_time.strftime("%A, %B %d, %Y, %I:%M %p")
+           st.write(f"🕒User Time: {formatted_user_time}")
         st.write(f"### Weather in {result['city']}")
         st.write(f"Temperature: {int(result['temperature'])}°C")
         icon = get_weather_icon(result['weather'])

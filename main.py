@@ -10,9 +10,66 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from io import BytesIO
 st.image("weatherly_logo.png", width=250)
-# padding: 10px 0 20px 0;">
-#🌦️ Weatherly
-#        <h3 style="color: #444;">Smart Weather. Live Maps. Simple Vibe.</h3>
+st.markdown("""
+<style>
+/* מזיז את כל התוכן מעלה ע"י הקטנת ה-padding העליון של הקונטיינר */
+.block-container {
+    padding-top: 0rem !important;
+    margin-top: -30px;
+    padding-bottom: 0rem !important;
+}
+
+/* מזיז את טופס החיפוש למעלה */
+form {
+    margin-top: -20px;
+    margin-bottom: 0px;
+}
+/* תיבת קלט */
+input[type="text"] {
+    padding: 6px 10px;
+    border-radius: 10px;
+    border: 1px solid #00aaff;
+    background-color: #f9fbfd;
+    font-size: 16px;
+    color: #333;
+    width: 100%;
+    box-shadow: 2px 2px 4px rgba(0,0,0,0.05);
+}
+input[type="text"]:focus {
+    border: 2px solid #00aaff !important;
+    outline: none !important;
+    box-shadow: 0 0 4px #00aaff !important;
+}
+
+/* כפתור Submit של הטופס */
+div.stButton > button {
+    background-color: #00aaff;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 18px;
+    font-size: 15px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+}
+div.stButton > button:hover {
+    color: #00aaff !important;
+    background-color: #e6f7ff !important;
+    border: 1px solid #00aaff !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+#כותרת מגניבה
+
+st.markdown("""
+    <div style="text-align: center; margin-top: -130px;">  
+        <h1 style="font-size: 30px; color: #00aaff; font-family: 'Segoe UI', sans-serif;">
+            Smart Weather. Live Maps. Simple Vibe.           
+        </h1>
+    </div>
+""", unsafe_allow_html=True)
 current_month = datetime.now().month
 month_name = datetime.now().strftime("%B")
 def get_monthly_avg_temps(lat, lon, month=current_month):
@@ -48,11 +105,18 @@ def get_monthly_avg_temps(lat, lon, month=current_month):
 def plot_temp_history(data):
     df = pd.DataFrame(data, columns=["Year", "Avg Temperature"])
     fig, ax = plt.subplots(figsize=(4, 2))
-    sns.barplot(x="Year", y="Avg Temperature", data=df, palette="coolwarm", ax=ax,width=0.4)
-    ax.set_title(f"{month_name} Avg Temps - Past 5 Years",fontsize=5, fontweight='bold', color="#00aaff")
-    ax.set_xlabel("YEAR", color="#00aaff", fontsize=5)
-    ax.set_ylabel("°C" , color="#00aaff", fontsize=5)
-    ax.set_ylim(20, 36)
+    sns.lineplot(x="Year", y="Avg Temperature", data=df, marker="o", color="#007acc", ax=ax)
+    years = df["Year"].tolist()  # [2020, 2021, 2022, 2023, 2024]
+    ax.set_xticks(years)
+    ax.set_title(f"{month_name} Avg Temps - Past 5 Years",fontsize=6, fontweight='bold', color="#00aaff")
+    ax.set_xlabel("YEAR", color="#00aaff", fontsize=6)
+    ax.set_ylabel("°C" , color="#00aaff", fontsize=6)
+    y_min = df["Avg Temperature"].min()
+    y_max = df["Avg Temperature"].max()
+    # נוסיף מרווח קטן כדי שהגרף לא יהיה צמוד לקצוות
+    padding = 2
+
+    ax.set_ylim(y_min - padding, y_max + padding)
     ax.tick_params(axis='both', labelsize=4)
     buf = BytesIO()
     plt.tight_layout()
@@ -61,30 +125,12 @@ def plot_temp_history(data):
     st.image(buf, caption=f"Historical {month_name} Temperatures", use_container_width=True)
 
 
-st.markdown("""
-    <div style="text-align: center; margin-top: -130px;">  
-        <h1 style="font-size: 30px; color: #00aaff; font-family: 'Segoe UI', sans-serif;">
-            Smart Weather. Live Maps. Simple Vibe.           
-        </h1>
-    </div>
-""", unsafe_allow_html=True)
-
-#selected_city = st.selectbox("בחר עיר", city_names)
 API_KEY = "0a867690493989d87c77fa39ebf46377"
 def get_weather(city):
     url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
     response = rq.get(url)
     if response.status_code == 200:
         data = response.json()
-#       temp = data['main']['temp']
-#       weather = data['weather'][0]['description']
-#       humidity = data['main']['humidity']
-#       print(f"City: {city}")
-#       print(f"Temperature: {temp}°C")
-#       print(f"Weather: {weather}")
-#       print(f"Humidity: {humidity}%")
-#   else:
-#       print("City not found.")
         return {
             "city": city,
             "temperature": data["main"]["temp"],
@@ -96,8 +142,6 @@ def get_weather(city):
         }
     else:
         return None
-        # החזרת תשובה של השגיאה במקום כלום
-        #return response.raise_for_status()
 def get_weather_icon(condition):
     condition = condition.lower()
     if "clear" in condition:
@@ -114,25 +158,19 @@ def get_weather_icon(condition):
         return "🌫️"
     else:
         return "🌡️"
-# Ask user for input
-#city = input("Enter city name: ")
-#get_weather(city)
-#st.title("My Private Reich Weather ☀️ or 🌧️ ")
 local_city = "Jerusalem"
 url = f"http://api.openweathermap.org/data/2.5/weather?q={local_city}&appid={API_KEY}&units=metric"
 response1 = rq.get(url)
 data1 = response1.json()
 local_zone = data1["timezone"]
-#city = st.text_input("Enter city name")
-#if st.button("Get Weather") and city:
-#cities_list = ["Tel Aviv", "Jerusalem", "Haifa", "Eilat"]
-with st.form(key="weather_form"):
-    city = st.text_input("Enter city name")
-    submitted = st.form_submit_button("Get Weather")
-st.markdown("</div>", unsafe_allow_html=True)
-#  if st.form_submit_button("") and city:
-if submitted and city:
 
+with st.form(key="weather_form"):
+ #   city = st.text_input("Enter city name")
+ #   city = st.text_input(label="", key="city_input")
+    city = st.text_input(label="Enter city name", key="city_input", label_visibility="collapsed")
+    submitted = st.form_submit_button("Get Weather")
+####st.markdown("</div>", unsafe_allow_html=True)
+if submitted and city:
     result = get_weather(city)
     if result:
         left_col, right_col = st.columns([2, 1])
@@ -146,7 +184,6 @@ if submitted and city:
             st.write(f"Temperature: {int(result['temperature'])}°C")
             icon = get_weather_icon(result['weather'])
             st.write(f"Condition: {icon} {result['weather']}")
-#        st.write(f"Condition: {result['weather']}")
             st.write(f"Humidity: {int(result['humidity'])}%")
             utc_now = datetime.utcnow()
             local_time = utc_now + timedelta(seconds=result["timezone_offset_sec"])
@@ -156,14 +193,12 @@ if submitted and city:
             lat = result["latitude"]
             lon = result["longitude"]
             st.write("🗺️ Map of Location:")
-            m = folium.Map(location=[lat, lon], zoom_start=13)
+            m = folium.Map(location=[lat, lon], zoom_start=8)
             folium.Marker([lat, lon], tooltip=result['city']).add_to(m)
             #folium_static(m)
             folium_static(m, width=200, height=200)
 
         history = get_monthly_avg_temps(result["latitude"], result["longitude"])
         plot_temp_history(history)
-         #   folium.Marker([lat, lon], tooltip=result["city"]).add_to(m)
-         #   folium_static(m, width=350, height=300)
     else:
         st.error("City not found.")

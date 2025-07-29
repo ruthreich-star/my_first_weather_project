@@ -117,7 +117,7 @@ def plot_temp_history(data):
     padding = 2
 
     ax.set_ylim(y_min - padding, y_max + padding)
-    ax.tick_params(axis='both', labelsize=4)
+    ax.tick_params(axis='both', labelsize=6)
     buf = BytesIO()
     plt.tight_layout()
     fig.savefig(buf, format="png")

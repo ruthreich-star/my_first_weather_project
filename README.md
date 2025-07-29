@@ -19,37 +19,16 @@ Weatherly is a sleek, interactive weather app built with Python and Streamlit. I
 
 📆 Libraries Used
 
-Library
+Library           Purpose
+streamlit         Web app UI and interactivity
+pandas, numpy     Data processing 
+requests          API requests (OpenWeatherMap & Open-Meteo)
+datetime, pytz    Date and time operations including timezones
+folium, streamlit_folium  Interactive maps
+matplotlib, Temperature trend plots
+ seaborn  io.BytesIO        Rendering graphs as image in app
 
-Purpose
 
-streamlit
-
-Web app UI and interactivity
-
-pandas, numpy
-
-Data processing
-
-requests
-
-API requests (OpenWeatherMap & Open-Meteo)
-
-datetime, pytz
-
-Date and time operations including timezones
-
-folium, streamlit_folium
-
-Interactive maps
-
-matplotlib, seaborn
-
-Temperature trend plots
-
-io.BytesIO
-
-Rendering graphs as image in app
 
 🧠 App Logic Overview
 

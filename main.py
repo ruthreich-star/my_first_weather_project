@@ -9,7 +9,9 @@ from streamlit_folium import folium_static
 import matplotlib.pyplot as plt
 import seaborn as sns
 from io import BytesIO
+#ICON for application
 st.image("weatherly_logo.png", width=250)
+#changing default settings of UI in streamlit
 st.markdown("""
 <style>
 /* מזיז את כל התוכן מעלה ע"י הקטנת ה-padding העליון של הקונטיינר */
@@ -70,8 +72,12 @@ st.markdown("""
         </h1>
     </div>
 """, unsafe_allow_html=True)
+#save current month for displaying name and number
 current_month = datetime.now().month
 month_name = datetime.now().strftime("%B")
+#calculate avg temp for the same month in the last 5 years ,
+# by having coordinates from the entered user city data and current month
+#output : list of (year,avg_temp)
 def get_monthly_avg_temps(lat, lon, month=current_month):
     current_year = datetime.now().year
     years = [current_year - i for i in range(1, 6)]
@@ -80,6 +86,7 @@ def get_monthly_avg_temps(lat, lon, month=current_month):
     for year in years:
         start_date = f"{year}-{month:02d}-01"
         end_date = f"{year}-{month:02d}-31"
+        # create API
         url = "https://archive-api.open-meteo.com/v1/archive"
         params = {
             "latitude": lat,
@@ -91,6 +98,7 @@ def get_monthly_avg_temps(lat, lon, month=current_month):
         }
         response = rq.get(url, params=params)
         if response.status_code == 200:
+            #result into json
             data = response.json()
             temps = data.get("daily", {}).get("temperature_2m_max", [])
             if temps:
@@ -101,16 +109,19 @@ def get_monthly_avg_temps(lat, lon, month=current_month):
         else:
             avg_temps.append((year, None))
     return avg_temps
-
+#line plot of avg temp for last 5 years
 def plot_temp_history(data):
     df = pd.DataFrame(data, columns=["Year", "Avg Temperature"])
+    #fix x size
     fig, ax = plt.subplots(figsize=(4, 2))
     sns.lineplot(x="Year", y="Avg Temperature", data=df, marker="o", color="#007acc", ax=ax)
     years = df["Year"].tolist()  # [2020, 2021, 2022, 2023, 2024]
     ax.set_xticks(years)
+    #graph title +x desc and y desc
     ax.set_title(f"{month_name} Avg Temps - Past 5 Years",fontsize=6, fontweight='bold', color="#00aaff")
     ax.set_xlabel("YEAR", color="#00aaff", fontsize=6)
     ax.set_ylabel("°C" , color="#00aaff", fontsize=6)
+#y values depent on avg values + padding
     y_min = df["Avg Temperature"].min()
     y_max = df["Avg Temperature"].max()
     # נוסיף מרווח קטן כדי שהגרף לא יהיה צמוד לקצוות
@@ -118,10 +129,12 @@ def plot_temp_history(data):
 
     ax.set_ylim(y_min - padding, y_max + padding)
     ax.tick_params(axis='both', labelsize=6)
+    #arrange for streamlit
     buf = BytesIO()
     plt.tight_layout()
     fig.savefig(buf, format="png")
     buf.seek(0)
+    #finaly the graph is like picture with title
     st.image(buf, caption=f"Historical {month_name} Temperatures", use_container_width=True)
 
 
@@ -158,23 +171,25 @@ def get_weather_icon(condition):
         return "🌫️"
     else:
         return "🌡️"
+#local city for local timezone
 local_city = "Jerusalem"
 url = f"http://api.openweathermap.org/data/2.5/weather?q={local_city}&appid={API_KEY}&units=metric"
 response1 = rq.get(url)
 data1 = response1.json()
 local_zone = data1["timezone"]
-
+#Create interactive form in streamlit
 with st.form(key="weather_form"):
- #   city = st.text_input("Enter city name")
- #   city = st.text_input(label="", key="city_input")
-    city = st.text_input(label="Enter city name", key="city_input", label_visibility="collapsed")
+    city = st.text_input(label="Enter city name", key="city_input", label_visibility="collapsed") #התיבה מוצגת, אבל בלי כיתוב מעליה.
     submitted = st.form_submit_button("Get Weather")
-####st.markdown("</div>", unsafe_allow_html=True)
+    # if city entered in  textbox  and user push button
 if submitted and city:
     result = get_weather(city)
     if result:
+        #חלוקת המסך לתצוגה יפה של התוצאות
         left_col, right_col = st.columns([2, 1])
+        #in the left print weathe data
         with left_col:
+            # local time print only if different from requested city timezone
             if local_zone != result["timezone_offset_sec"]:
                user_timezone = pytz.timezone("Asia/Jerusalem")
                user_time = datetime.now(user_timezone)
@@ -189,6 +204,7 @@ if submitted and city:
             local_time = utc_now + timedelta(seconds=result["timezone_offset_sec"])
             formatted_time = local_time.strftime("%A, %B %d, %Y, %I:%M %p")
             st.write(f"🌍 weather Location Time: {formatted_time}")
+        #print map in the right
         with right_col:
             lat = result["latitude"]
             lon = result["longitude"]
@@ -197,7 +213,7 @@ if submitted and city:
             folium.Marker([lat, lon], tooltip=result['city']).add_to(m)
             #folium_static(m)
             folium_static(m, width=200, height=200)
-
+# history avg data to graph
         history = get_monthly_avg_temps(result["latitude"], result["longitude"])
         plot_temp_history(history)
     else:

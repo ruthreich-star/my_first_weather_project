@@ -179,7 +179,8 @@ data1 = response1.json()
 local_zone = data1["timezone"]
 #Create interactive form in streamlit
 with st.form(key="weather_form"):
-    city = st.text_input(label="Enter city name", key="city_input", label_visibility="collapsed") #התיבה מוצגת, אבל בלי כיתוב מעליה.
+    #הצגת הבקשה להקלדת עיר בתוך תיבת הטקסט ולא מעליה
+    city = st.text_input(label="", placeholder="Enter city name", key="city_input")
     submitted = st.form_submit_button("Get Weather")
     # if city entered in  textbox  and user push button
 if submitted and city:
@@ -211,7 +212,6 @@ if submitted and city:
             st.write("🗺️ Map of Location:")
             m = folium.Map(location=[lat, lon], zoom_start=8)
             folium.Marker([lat, lon], tooltip=result['city']).add_to(m)
-            #folium_static(m)
             folium_static(m, width=200, height=200)
 # history avg data to graph
         history = get_monthly_avg_temps(result["latitude"], result["longitude"])
